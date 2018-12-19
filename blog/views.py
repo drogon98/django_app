@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404
+# from django.core.urlresolvers import reverse_lazy ,,deprecated for django2+
+from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
@@ -59,7 +61,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 class PostDeleteView(DeleteView):  # accepts a pk or slug but not id
     model = Post
-    success_url = '/blog/'
+    success_url = reverse_lazy('blog_home')
     # template_name = "blog/post_detail.html"
 
     def test_func(self):  # preventing another user from updating other users post
