@@ -19,3 +19,10 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse("post_detail", kwargs={'pk': self.id})
+
+
+class Mail(models.Model):
+    sender = models.EmailField(max_length=254)
+    to = models.EmailField(max_length=254)
+    subject = models.CharField(max_length=30)
+    message = models.TextField(max_length=100)

@@ -1,11 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 # from django.core.urlresolvers import reverse_lazy ,,deprecated for django2+
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
 from blog.models import Post
+from blog.forms import MailForm
 
 
 # the context arg of render is optional
@@ -69,6 +72,25 @@ class PostDeleteView(DeleteView):  # accepts a pk or slug but not id
         if self.request.user == post.author:
             return True
         return False
+
+
+def sendmail(request):
+    if request.method == "POST":
+        form = MailForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.sender = User.objects.get(id=request.user.id).email
+            instance.save()
+            subject = form.cleaned_data.get('subject')
+            message = form.cleaned_data.get('message')
+            sender = form.cleaned_data.get('sender')
+            to = [form.cleaned_data.get('to')]
+            send_mail(subject, message, sender, to)
+            messages.success(request, "Your email has been successfully sent!")
+            return redirect('blog_home')
+    else:
+        form = MailForm()
+    return render(request, 'blog/mail.html', {'form': form})
 
 
 def about(request):
