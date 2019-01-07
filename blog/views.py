@@ -12,9 +12,29 @@ from blog.forms import MailForm
 
 
 # the context arg of render is optional
-def home(request):
-    context = {"posts": Post.objects.all()}
+def home(request, post_id=None):
+    new_like, created = Likes.objects.get_or_create(user=request.user, post_id=post_id)
+    p = Post.objects.get(id=post_id)
+    if created:
+        text = "unlike"
+        no_of_likes = p.likes_set.all().count() - 1
+    else:
+        text = "like"
+        no_of_likes = p.likes_set.all().count()
+    # args={'text':text,"no_of_likes":likes}
+    context = {"posts": Post.objects.all(), 'text': text, "no_of_likes": likes}
     return render(request, "blog/home.html", context)
+
+# def like(request,post_id):
+#     new_like,created=Likes.objects.get_or_create(user=request.user,post_id=post_id)
+#     if created:
+#         text="unlike"
+#         no_of_likes=Likes.objects.all().count()-1
+#     else:
+#         text="like"
+#         no_of_likes=Likes.objects.all().count()
+#     args={'text':text,"no_of_likes":likes}
+#     return render(request,"blog/home.html",args)
 
 
 class PostListView(ListView):
