@@ -6,38 +6,20 @@ from django.core.mail import send_mail
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
+from django.contrib.auth.decorators import login_required
 
 from blog.models import Post
 from blog.forms import MailForm
 
 
 # the context arg of render is optional
-def home(request, post_id=None):
-    new_like, created = Likes.objects.get_or_create(user=request.user, post_id=post_id)
-    p = Post.objects.get(id=post_id)
-    if created:
-        text = "unlike"
-        no_of_likes = p.likes_set.all().count() - 1
-    else:
-        text = "like"
-        no_of_likes = p.likes_set.all().count()
-    # args={'text':text,"no_of_likes":likes}
-    context = {"posts": Post.objects.all(), 'text': text, "no_of_likes": likes}
+@login_required
+def home(request):
+    context = {"posts": Post.objects.all(), }
     return render(request, "blog/home.html", context)
 
-# def like(request,post_id):
-#     new_like,created=Likes.objects.get_or_create(user=request.user,post_id=post_id)
-#     if created:
-#         text="unlike"
-#         no_of_likes=Likes.objects.all().count()-1
-#     else:
-#         text="like"
-#         no_of_likes=Likes.objects.all().count()
-#     args={'text':text,"no_of_likes":likes}
-#     return render(request,"blog/home.html",args)
 
-
-class PostListView(ListView):
+class PostListView(ListView, LoginRequiredMixin):
     model = Post
     template_name = "blog/home.html"  # app/<model>_<view_type>.html
     context_object_name = "posts"
@@ -45,7 +27,7 @@ class PostListView(ListView):
     paginate_by = 5
 
 
-class UserPostListView(ListView):
+class UserPostListView(ListView, LoginRequiredMixin):
     model = Post
     template_name = "blog/user_post.html"  # app/<model>_<view_type>.html
     context_object_name = "posts"
@@ -56,7 +38,7 @@ class UserPostListView(ListView):
         return Post.objects.filter(author=user).order_by("-date_posted")
 
 
-class PostDetailView(DetailView):  # accepts a pk or slug but not id
+class PostDetailView(DetailView, LoginRequiredMixin):  # accepts a pk or slug but not id
     model = Post
     template_name = "blog/post_detail.html"  # app/<model>_<view_type>.html
     # context_object_name="posts"
@@ -82,7 +64,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return False
 
 
-class PostDeleteView(DeleteView):  # accepts a pk or slug but not id
+class PostDeleteView(DeleteView, LoginRequiredMixin):  # accepts a pk or slug but not id
     model = Post
     success_url = reverse_lazy('blog_home')
     # template_name = "blog/post_detail.html"
@@ -94,6 +76,7 @@ class PostDeleteView(DeleteView):  # accepts a pk or slug but not id
         return False
 
 
+@login_required
 def sendmail(request):
     if request.method == "POST":
         form = MailForm(request.POST)
